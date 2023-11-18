@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model UserApiLimit {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserSubscription {
+  id                     String    @id @default(cuid())
+  userId                 String    @unique
+  stripeCustomerId       String?   @unique @map(name: "stripe_customer_id")
+  stripeSubscriptionId   String?   @unique @map(name: "stripe_subscription_id")
+  stripePriceId          String?   @map(name: "stripe_price_id")
+  stripeCurrentPeriodEnd DateTime? @map(name: "stripe_current_period_end")
+}
+
+model Chats {
+  id        String     @id @default(cuid())
+  pdfName   String     @map(name: "pdf_name")
+  pdfUrl    String     @map(name: "pdf_url")
+  createdAt DateTime   @default(now()) @map(name: "created_At")
+  userId    String     @map(name: "user_id")
+  fileKey   String     @map(name: "file_key")
+  Messages  Messages[]
+}
+
+model Messages {
+  id        String         @id @default(cuid())
+  chatId    String         @map(name: "chat_id")
+  chat      Chats          @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  content   String         @db.LongText
+  createdAt DateTime       @default(now()) @map(name: "created_at")
+  role      UserSystemEnum
+
+  @@index([chatId])
+}
+
+enum UserSystemEnum {
+  system
+  user
+}
